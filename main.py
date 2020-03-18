@@ -1,7 +1,7 @@
 #@Author: OPA
 #@Date: 18.03.2020 2:00 AM GMT+2
-#@Version 1.0.0.0
-#@No features and improvements added, base version.
+#@Version 1.0.0.1
+#@pack and unpack methods updated for binary representation in CSV file
 
 import csv
 import time
@@ -64,13 +64,14 @@ class Tx(ARINC429):
 
 	#Param: pv_value int, function parse through param and fill lv_pack list with pv_value digits.
 	#		insert(0, XXXX) is used to keep number consistency (otherwise, lv_pack will be populated with inverse order of pv_value digits)
-	def pack_word(pv_value):
-		lv_pack = []
-		while int(pv_value):
-			lv_pack.insert(0, int(pv_value % 10))
-			pv_value = pv_value / 10
-		
-		return lv_pack
+	def unpack_word(pv_value):
+		lv_binary = int(bin(pv_value)[2:])
+    		unpacked = []
+    		while lv_binary:
+        		unpacked.insert(0, lv_binary%10)
+        		lv_binary = lv_binary / 10
+    
+   		return unpacked
 
 	#Param: pv_value - integer that should be transmitted, comOk, ack - internal flags.
 	# Function check if communication is established through <<comOK>> and if RX received last message through <<ack>>.
@@ -95,6 +96,17 @@ class Rx(ARINC429):
 		if pv_chanID:
 			print("Receiver configured! Establishing communication!")
 			rx_chanID = pv_chanID
+
+	def unpack(pv_list):
+    		lv_packed = 0
+    		lv_pow = 0
+    		lv_decimal = 0
+    		for index in reversed(pv_list):
+        		lv_packed = lv_packed * 10 + index
+        		lv_decimal = lv_decimal + 2**lv_pow * index
+        		lv_pow = lv_pow + 1
+     
+    		return lv_decimal
 
 
     #Param: comOk, ack - global flags for internal use.
